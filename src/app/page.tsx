@@ -59,13 +59,26 @@ export default function Home() {
 
         <section style={{border:"1px solid #e5e7eb",borderRadius:16,padding:16}}>
           <h3>Get full report</h3>
-          <p style={{color:"#6b7280"}}>Payments coming soon (Paytm).</p>
-          <button disabled style={{padding:"10px 14px",borderRadius:12,border:0,background:"#9ca3af",color:"#fff"}}>
-            Paytm Checkout — not connected yet
-          </button>
-          <p style={{marginTop:8,color:"#6b7280",fontSize:12}}>We’ll enable this once your Paytm keys are ready.</p>
-        </section>
-      </div>
-    </main>
-  );
-}
+<p style={{color:"#6b7280"}}>Instant PDF (free preview)</p>
+<button
+  onClick={async ()=>{
+    if(!name || !dob){ alert("Please enter your name and date of birth."); return; }
+    const r = await fetch("/api/report", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ name, dob, email })
+    });
+    if(!r.ok){ alert("Could not generate PDF"); return; }
+    const blob = await r.blob();
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url; a.download = "NumerixPro_Report.pdf"; a.click();
+    URL.revokeObjectURL(url);
+  }}
+  style={{padding:"10px 14px", borderRadius:12, border:0, background:"#0ea5e9", color:"#fff"}}
+>
+  Download PDF Report
+</button>
+<p style={{marginTop:8, color:"#6b7280", fontSize:12}}>
+  Later we’ll lock this after Paytm payment.
+</p>
