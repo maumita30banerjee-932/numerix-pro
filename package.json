@@ -1,6 +1,6 @@
 {
   "name": "numerix-pro",
-  "version": "0.1.1",
+  "version": "1.0.0",
   "private": true,
   "scripts": {
     "dev": "next dev",
@@ -11,14 +11,14 @@
   "dependencies": {
     "next": "14.2.5",
     "react": "18.2.0",
-    "react-dom": "18.2.0"
+    "react-dom": "18.2.0",
     "pdf-lib": "^1.17.1"
   },
   "devDependencies": {
     "typescript": "5.6.2",
-    "@types/react": "18.2.46",
     "@types/node": "20.11.30",
-    "eslint": "8.57.0",
-    "eslint-config-next": "14.2.5"
+    "@types/react": "18.2.46",
+    "eslint": "8.57.0"
   }
 }
+
