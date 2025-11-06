@@ -27,16 +27,7 @@ function tipFor(n:number, fb:number){
   return t[n] || t[fb] || "Balance your space: clean entrance, light & airflow.";
 }
 
-function wrap(txt:string, max=90){
-  const w=txt.split(" "); const lines:string[]=[]; let line="";
-  for(const x of w){ const tryLine=(line?line+" ":"")+x; if(tryLine.length>max){ lines.push(line); line=x; } else line=tryLine; }
-  if(line) lines.push(line); return lines;
-}
-
-export async function POST(req: Request){
-  const { name="", dob="", email="" } = await req.json().catch(()=>({}));
-  if(!name || !dob) return NextResponse.json({error:"Name and DOB required"}, {status:400});
-
+async function buildPdf(name:string, dob:string){
   const lp = lifePath(dob);
   const nn = nameNumber(name);
   const advice = tipFor(lp, nn);
@@ -60,6 +51,7 @@ export async function POST(req: Request){
   page.drawText(`Name Number: ${nn}`, { x:32, y, size:12, font:bold }); y-=24;
 
   page.drawText("Vastu Guidance", { x:32, y, size:14, font:bold }); y-=18;
+  const wrap=(t:string,m=90)=>{const w=t.split(" ");const L:string[]=[];let l="";for(const x of w){const t2=(l?l+" ":"")+x;if(t2.length>m){L.push(l);l=x;}else l=t2;} if(l) L.push(l);return L;};
   for (const line of wrap(advice)) { page.drawText(line, { x:32, y, size:11, font }); y-=14; }
   y-=8;
   const more="General Enhancements: keep the entrance clean and well-lit; allow natural light and airflow; declutter regularly; repair leaks; choose calming colors for rest areas.";
@@ -75,4 +67,19 @@ export async function POST(req: Request){
       "Content-Disposition": 'attachment; filename="NumerixPro_Report.pdf"'
     }
   });
+}
+
+// POST: used by the button
+export async function POST(req: Request){
+  const { name="", dob="" } = await req.json().catch(()=>({}));
+  if(!name || !dob) return NextResponse.json({error:"Name and DOB required"}, {status:400});
+  return buildPdf(name, dob);
+}
+
+// GET: fallback so a simple link works too
+export async function GET(req: Request){
+  const u = new URL(req.url);
+  const name = u.searchParams.get("name") || "User";
+  const dob  = u.searchParams.get("dob")  || "2000-01-01";
+  return buildPdf(name, dob);
 }
