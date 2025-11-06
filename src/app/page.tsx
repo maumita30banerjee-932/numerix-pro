@@ -2,11 +2,11 @@
 import { useState } from "react";
 
 export default function Home() {
-  // --- simple numerology & vastu (all-in-one file) ---
+  // ---- numerology helpers ----
   const digitSum = (n:number)=>{ let s=0; while(n>0){s+=n%10; n=Math.floor(n/10);} return s; };
   const reduce = (n:number)=>{ const m=new Set([11,22,33]); while(n>9 && !m.has(n)) n=digitSum(n); return n; };
   const lifePath = (dob:string)=>{ const [y,m,d]=dob.split("-").map(Number); return reduce(digitSum(y)+digitSum(m)+digitSum(d)); };
-  const nameNumber = (name:string)=> {
+  const nameNumber = (name:string)=>{
     const map:Record<string,number>={A:1,B:2,C:3,D:4,E:5,F:6,G:7,H:8,I:9,J:1,K:2,L:3,M:4,N:4,O:7,P:8,Q:1,R:2,S:3,T:4,U:6,V:6,W:6,X:5,Y:1,Z:7};
     const total = name.toUpperCase().replace(/[^A-Z]/g,"").split("").reduce((s,c)=>s+(map[c]||0),0);
     return reduce(total);
@@ -26,69 +26,80 @@ export default function Home() {
     33:"Compassionate teacher—soothing colors in living area."
   };
 
-  // --- UI state ---
+  // ---- UI state ----
   const [name, setName] = useState("");
-  const [dob, setDob] = useState("");     // YYYY-MM-DD
+  const [dob, setDob] = useState(""); // YYYY-MM-DD
   const [email, setEmail] = useState("");
   const canCalc = !!name && !!dob;
   const lp = canCalc ? lifePath(dob) : null;
   const nn = canCalc ? nameNumber(name) : null;
+  const advice = canCalc && lp && nn ? (tips[lp] || tips[nn] || "") : "";
+
+  // ---- PDF download via API (POST) ----
+  const downloadPdf = async () => {
+    if (!name || !dob) { alert("Please enter your name and date of birth."); return; }
+    const r = await fetch("/api/report", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ name, dob, email })
+    });
+    if (!r.ok) { alert("Could not generate PDF"); return; }
+    const blob = await r.blob();
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url; a.download = "NumerixPro_Report.pdf"; a.click();
+    URL.revokeObjectURL(url);
+  };
 
   return (
-    <main style={{maxWidth:980,margin:"0 auto",padding:24,fontFamily:"system-ui"}}>
+    <main style={{maxWidth:980, margin:"0 auto", padding:24, fontFamily:"system-ui"}}>
       <h1>Numerix Pro</h1>
       <p style={{color:"#6b7280"}}>Automatic Numerology & simple Vastu tips</p>
 
-      <div style={{display:"grid",gap:16,gridTemplateColumns:"1.2fr .8fr"}}>
-        <section style={{border:"1px solid #e5e7eb",borderRadius:16,padding:16}}>
-          <div style={{display:"grid",gap:10}}>
+      <div style={{display:"grid", gap:16, gridTemplateColumns:"1.2fr .8fr"}}>
+        <section style={{border:"1px solid #e5e7eb", borderRadius:16, padding:16}}>
+          <div style={{display:"grid", gap:10}}>
             <input placeholder="Full name" value={name} onChange={e=>setName(e.target.value)} />
             <input type="date" value={dob} onChange={e=>setDob(e.target.value)} />
             <input type="email" placeholder="Email (optional)" value={email} onChange={e=>setEmail(e.target.value)} />
           </div>
 
           {canCalc && (
-            <div style={{marginTop:16,border:"1px solid #e5e7eb",borderRadius:14,padding:14}}>
+            <div style={{marginTop:16, border:"1px solid #e5e7eb", borderRadius:14, padding:14}}>
               <h3>Your Core Numbers</h3>
               <p><b>Life Path:</b> {lp}</p>
               <p><b>Name Number:</b> {nn}</p>
-              <p>{tips[lp!] || tips[nn!] || "Balance: clean entrance, light & airflow."}</p>
+              <p>{advice || "Balance: clean entrance, light & airflow."}</p>
             </div>
           )}
         </section>
 
-        <section style={{border:"1px solid #e5e7eb",borderRadius:16,padding:16}}>
+        <section style={{border:"1px solid #e5e7eb", borderRadius:16, padding:16}}>
           <h3>Get full report</h3>
-<p style={{color:"#6b7280"}}>Instant PDF (free preview)</p>
-<button
-  onClick={async ()=>{
-    if(!name || !dob){ alert("Please enter your name and date of birth."); return; }
-    const r = await fetch("/api/report", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ name, dob, email })
-    });
-    if(!r.ok){ alert("Could not generate PDF"); return; }
-    const blob = await r.blob();
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url; a.download = "NumerixPro_Report.pdf"; a.click();
-    URL.revokeObjectURL(url);
-  }}
-  style={{padding:"10px 14px", borderRadius:12, border:0, background:"#0ea5e9", color:"#fff"}}
->
-  Download PDF Report
-</button>
-          <p style={{marginTop:8}}>
-  Having trouble?{" "}
-  <a
-    href={`/api/report?name=${encodeURIComponent(name || "User")}&dob=${encodeURIComponent(dob || "2000-01-01")}`}
-    style={{textDecoration:"underline"}}
-  >
-    Direct download (backup)
-  </a>
-</p>
+          <p style={{color:"#6b7280"}}>Instant PDF (free preview)</p>
 
-<p style={{marginTop:8, color:"#6b7280", fontSize:12}}>
-  Later we’ll lock this after Paytm payment.
-</p>
+          <button
+            onClick={downloadPdf}
+            style={{padding:"10px 14px", borderRadius:12, border:0, background:"#0ea5e9", color:"#fff"}}
+          >
+            Download PDF Report
+          </button>
+
+          <p style={{marginTop:8}}>
+            Having trouble?{" "}
+            <a
+              href={`/api/report?name=${encodeURIComponent(name || "User")}&dob=${encodeURIComponent(dob || "2000-01-01")}`}
+              style={{textDecoration:"underline"}}
+            >
+              Direct download (backup)
+            </a>
+          </p>
+
+          <p style={{marginTop:8, color:"#6b7280", fontSize:12}}>
+            We’ll lock this after Paytm payment.
+          </p>
+        </section>
+      </div>
+    </main>
+  );
+}
