@@ -79,6 +79,16 @@ export default function Home() {
 >
   Download PDF Report
 </button>
+          <p style={{marginTop:8}}>
+  Having trouble?{" "}
+  <a
+    href={`/api/report?name=${encodeURIComponent(name || "User")}&dob=${encodeURIComponent(dob || "2000-01-01")}`}
+    style={{textDecoration:"underline"}}
+  >
+    Direct download (backup)
+  </a>
+</p>
+
 <p style={{marginTop:8, color:"#6b7280", fontSize:12}}>
   Later we’ll lock this after Paytm payment.
 </p>
