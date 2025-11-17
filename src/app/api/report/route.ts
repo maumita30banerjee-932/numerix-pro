@@ -1,8 +1,6 @@
 // src/app/api/report/route.ts
 import { NextResponse } from "next/server";
-import fetch from "node-fetch"; // Vercel node environment normally supports fetch; kept for clarity
 import { PDFDocument, StandardFonts, rgb } from "pdf-lib";
-
 /**
  * Numerix Pro — Premium 5-page report generator (Option A)
  * - Cover with full-bleed color band
